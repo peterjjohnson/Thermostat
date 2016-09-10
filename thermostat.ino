@@ -23,22 +23,15 @@ void setup()
 // The main event
 void loop()
 {
-  // If there's data in the serial buffer try and use it to adjust the temp
-  if (Serial.available()) {
-    adjustTemp(Serial.read());
-  }
-
   updateStats(); // Update our temp and humidity stats
   setFurnaceState(); // Turn the furnace on or off if we need to
-
-  // We loop every 500ms but we'll only print an update every 2s
-  if (cycle == 4) {
-    cycle = 0;
-    printInfo();
+  
+  // If there's data in the serial buffer try and use it to adjust the temp
+  if (Serial.available()) {
+    processRequest(Serial.readString());
   }
   
-  cycle++;
-  delay(500);
+  delay(100);
 }
 
 // Get current temp and humidity stats
@@ -48,6 +41,17 @@ void updateStats()
   humidity = sensor.getRH();
   // Measure current temperature
   realTemp = sensor.getTemp();
+}
+
+void processRequest(String request)
+{
+  if (request == "getInfo") {
+    printInfo();
+  } else if (request == "upHold") {
+    adjustTemp(char(30));
+  } else if (request == "downHold") {
+    adjustTemp(char(31));
+  }
 }
 
 // Adjust the temp up or down as indicated
@@ -89,18 +93,22 @@ void setFurnaceState()
 // Print current stats and settings to the serial output in JSON format
 void printInfo()
 {
-  Serial.print("{");
 
-  Serial.print("\"CurrentTemp\":\"");
+  Serial.print("{");
+  
+  Serial.print("\"Temp\":");
   Serial.print(realTemp);
+  Serial.print(",");
   
-  Serial.print("\",\"Humidity\":\"");
+  Serial.print("\"Humidity\":");
   Serial.print(humidity);
+  Serial.print(",");
   
-  Serial.print("\",\"HoldTemp\":\"");
+  Serial.print("\"HoldTemp\":");
   Serial.print(holdTemp);
+  Serial.print(",");
   
-  Serial.print("\",\"FurnaceState\":");
+  Serial.print("\"Furnace\":");
 
   if (furnaceState == HIGH) {
     Serial.print("\"ON\"");
