@@ -6,7 +6,6 @@
 float humidity = 0;
 float realTemp = 0;
 float holdTemp = 18;
-int cycle = 0;
 char furnaceState = LOW;
 
 // Create Instance of HTU21D or SI7021 temp and humidity sensor and MPL3115A2 barrometric sensor
@@ -29,9 +28,11 @@ void loop()
   // If there's data in the serial buffer try and use it to adjust the temp
   if (Serial.available()) {
     processRequest(Serial.readString());
+  } else {
+    printInfo();
   }
   
-  delay(100);
+  delay(250);
 }
 
 // Get current temp and humidity stats
@@ -43,14 +44,24 @@ void updateStats()
   realTemp = sensor.getTemp();
 }
 
+void printHoldTemp()
+{
+  Serial.print("{\"HoldTemp\":");
+  Serial.print(holdTemp);
+  Serial.print("}");
+}
+
 void processRequest(String request)
 {
-  if (request == "getInfo") {
-    printInfo();
-  } else if (request == "upHold") {
+  if (request == "upHold") {
     adjustTemp(char(30));
+    printHoldTemp();
   } else if (request == "downHold") {
     adjustTemp(char(31));
+    printHoldTemp();
+  } else {
+    Serial.print("Unrecognized request\n");
+    Serial.print(request);
   }
 }
 
