@@ -28,9 +28,9 @@ void loop()
   // If there's data in the serial buffer try and use it to adjust the temp
   if (Serial.available()) {
     processRequest(Serial.readString());
-  } else {
-    printInfo();
   }
+    
+  printInfo(); // Print current info
   
   delay(250);
 }
@@ -44,21 +44,12 @@ void updateStats()
   realTemp = sensor.getTemp();
 }
 
-void printHoldTemp()
-{
-  Serial.print("{\"HoldTemp\":");
-  Serial.print(holdTemp);
-  Serial.print("}");
-}
-
 void processRequest(String request)
 {
   if (request == "upHold") {
     adjustTemp(char(30));
-    printHoldTemp();
   } else if (request == "downHold") {
     adjustTemp(char(31));
-    printHoldTemp();
   } else {
     Serial.print("Unrecognized request\n");
     Serial.print(request);
