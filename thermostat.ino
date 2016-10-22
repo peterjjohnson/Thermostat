@@ -46,30 +46,13 @@ void updateStats()
 
 void processRequest(String request)
 {
-  if (request == "upHold") {
-    adjustTemp(char(30));
-  } else if (request == "downHold") {
-    adjustTemp(char(31));
+  String command = request.substring(request.lastIndexOf(";") + 1, request.lastIndexOf(":"));
+  String value = request.substring(request.lastIndexOf(":") + 1);
+  if (command == "setTemp") {
+    holdTemp = value.toFloat();
   } else {
     Serial.print("Unrecognized request\n");
-    Serial.print(request);
-  }
-}
-
-// Adjust the temp up or down as indicated
-void adjustTemp(char tempDirection) 
-{
-  switch (tempDirection) {
-    case 30: // Up
-      if (holdTemp < 25) { // 25 seems like a good max temp
-        holdTemp += 0.5;
-      }
-      break;
-    case 31: // Down
-      if (holdTemp > 15) { // 15 seems like a good min temp
-        holdTemp -= 0.5;
-      }
-      break;
+    Serial.print(command);
   }
 }
 
