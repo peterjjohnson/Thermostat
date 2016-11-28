@@ -6,9 +6,10 @@
 float humidity = 0;
 float realTemp = 0;
 float holdTemp = 18;
+float threshold = 1;
 char furnaceState = LOW;
 
-// Create Instance of HTU21D or SI7021 temp and humidity sensor and MPL3115A2 barrometric sensor
+// Create instance of HTU21D or SI7021 temp and humidity sensor and MPL3115A2 barometric sensor
 Weather sensor;
 
 // Get the hardware ready
@@ -32,7 +33,7 @@ void loop()
     
   printInfo(); // Print current info
   
-  delay(250);
+  delay(100);
 }
 
 // Get current temp and humidity stats
@@ -44,15 +45,16 @@ void updateStats()
   realTemp = sensor.getTemp();
 }
 
+// Parse and process requests via serial port
 void processRequest(String request)
 {
   String command = request.substring(request.lastIndexOf(";") + 1, request.lastIndexOf(":"));
   String value = request.substring(request.lastIndexOf(":") + 1);
+  
   if (command == "setTemp") {
     holdTemp = value.toFloat();
   } else {
     Serial.print("Unrecognized request\n");
-    Serial.print(command);
   }
 }
 
@@ -60,16 +62,18 @@ void processRequest(String request)
 void setFurnaceState() 
 {
   int tempdiff = holdTemp - realTemp;
-  bool stateChange = true;
-  if (tempdiff >= 1 && furnaceState == LOW) {
-    furnaceState = HIGH;
-  } else if (tempdiff < 1 && furnaceState == HIGH) {
-    furnaceState = LOW;
-  } else {
-    stateChange = false;
+  char newState = furnaceState;
+  
+  if (tempdiff >= threshold) {
+    // Current temp is more than threshold below holdtemp, turn the furnace on
+    newState = HIGH;
+  } else if (abs(tempdiff) >= threshold) {
+    // Current temp is more than threshold above holdtemp, turn the furnace off
+    newState = LOW;
   }
   
-  if (stateChange) {
+  if (newState != furnaceState) {
+    furnaceState = newState;
     // Currently, just turn the LED pin on or off to simulate the furnace
     digitalWrite(13, furnaceState);
   }
