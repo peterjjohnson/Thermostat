@@ -2,12 +2,16 @@
 #include "SparkFun_Si7021_Breakout_Library.h"
 #include <Wire.h>
 
+const int RELAY = 7; // Use pin 7 to control the relay
+const char ON = LOW; // The relay closes when it receives a LOW signal
+const char OFF = HIGH; // The relay opens when it receives a HIGH signal
+
 // Set up our globals
 float humidity = 0;
 float realTemp = 0;
 float holdTemp = 18;
 float threshold = 1;
-char furnaceState = LOW;
+char furnaceState = OFF;
 
 // Create instance of HTU21D or SI7021 temp and humidity sensor and MPL3115A2 barometric sensor
 Weather sensor;
@@ -16,7 +20,7 @@ Weather sensor;
 void setup()
 {
   Serial.begin(9600);   // open serial over USB at 9600 baud
-  pinMode(13, OUTPUT);  // initialize LED pin for output
+  pinMode(RELAY, OUTPUT);   // initialize pin 7 for output
   sensor.begin();       // connect to our temp and humidity sensor
 }
 
@@ -66,16 +70,15 @@ void setFurnaceState()
   
   if (tempdiff >= threshold) {
     // Current temp is more than threshold below holdtemp, turn the furnace on
-    newState = HIGH;
+    newState = ON;
   } else if (abs(tempdiff) >= threshold) {
     // Current temp is more than threshold above holdtemp, turn the furnace off
-    newState = LOW;
+    newState = OFF;
   }
   
   if (newState != furnaceState) {
     furnaceState = newState;
-    // Currently, just turn the LED pin on or off to simulate the furnace
-    digitalWrite(13, furnaceState);
+    digitalWrite(RELAY, furnaceState);
   }
 }
 
@@ -99,7 +102,7 @@ void printInfo()
   
   Serial.print("\"Furnace\":");
 
-  if (furnaceState == HIGH) {
+  if (furnaceState == ON) {
     Serial.print("\"ON\"");
   } else {
     Serial.print("\"OFF\"");
